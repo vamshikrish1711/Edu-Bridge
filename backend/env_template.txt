@@ -1,0 +1,23 @@
+# Flask Configuration
+SECRET_KEY=your-secret-key-here
+FLASK_ENV=development
+
+# MongoDB Configuration
+MONGODB_HOST=localhost
+MONGODB_PORT=27017
+MONGODB_DATABASE=edubridge_db
+MONGODB_USERNAME=
+MONGODB_PASSWORD=
+
+# Alternative: Use MONGODB_URI for direct connection string
+# MONGODB_URI=mongodb://localhost:27017/edubridge_db
+
+# JWT Configuration
+JWT_SECRET_KEY=jwt-secret-key
+
+# Mail Configuration
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password 
