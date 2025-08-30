@@ -18,7 +18,13 @@ def create_app(config_class=Config):
     jwt.init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
-    CORS(app)
+    
+    # Configure CORS properly
+    CORS(app, 
+         origins=["http://localhost:3000", "http://localhost:1625", "http://localhost:5173"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+         supports_credentials=True)
 
     # Connect to MongoDB
     try:

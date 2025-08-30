@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { authService, userService, campaignService, donationService } from '../../services/apiService';
-import Navbar from '../../components/Navbar';
+import RoleBasedNavbar from '../../components/RoleBasedNavbar';
 
 const AdminDashboard = () => {
   const [user, setUser] = useState(null);
@@ -15,6 +15,10 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
+    if (!currentUser || currentUser.role !== 'admin') {
+      window.location.href = '/login';
+      return;
+    }
     setUser(currentUser);
     fetchStats();
   }, []);
@@ -47,7 +51,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen animated-bg">
-      <Navbar />
+      <RoleBasedNavbar userRole="admin" />
       
       <div className="pt-20 px-4">
         <div className="max-w-7xl mx-auto">
@@ -94,92 +98,59 @@ const AdminDashboard = () => {
                 <div className="text-4xl">👥</div>
                 <h3 className="text-xl font-semibold text-white">User Management</h3>
                 <p className="text-white/70">View and manage all users</p>
-                <button className="glass-button text-white hover:bg-white hover:text-gray-800">
+                <Link to="/admin/users" className="glass-button text-white hover:bg-white hover:text-gray-800 block">
                   Manage Users
-                </button>
+                </Link>
               </div>
             </div>
 
             <div className="glass-card group hover:scale-105 transition-transform duration-300">
               <div className="text-center space-y-4">
                 <div className="text-4xl">📊</div>
-                <h3 className="text-xl font-semibold text-white">Campaign Analytics</h3>
-                <p className="text-white/70">Monitor campaign performance</p>
-                <button className="glass-button text-white hover:bg-white hover:text-gray-800">
+                <h3 className="text-xl font-semibold text-white">Analytics</h3>
+                <p className="text-white/70">View detailed platform analytics</p>
+                <Link to="/admin/analytics" className="glass-button text-white hover:bg-white hover:text-gray-800 block">
                   View Analytics
-                </button>
+                </Link>
               </div>
             </div>
 
             <div className="glass-card group hover:scale-105 transition-transform duration-300">
               <div className="text-center space-y-4">
-                <div className="text-4xl">💰</div>
-                <h3 className="text-xl font-semibold text-white">Donation Reports</h3>
-                <p className="text-white/70">Track all donations</p>
-                <button className="glass-button text-white hover:bg-white hover:text-gray-800">
-                  View Reports
-                </button>
-              </div>
-            </div>
-
-            <div className="glass-card group hover:scale-105 transition-transform duration-300">
-              <div className="text-center space-y-4">
-                <div className="text-4xl">⚙️</div>
-                <h3 className="text-xl font-semibold text-white">System Settings</h3>
-                <p className="text-white/70">Configure platform settings</p>
-                <button className="glass-button text-white hover:bg-white hover:text-gray-800">
-                  Settings
-                </button>
-              </div>
-            </div>
-
-            <div className="glass-card group hover:scale-105 transition-transform duration-300">
-              <div className="text-center space-y-4">
-                <div className="text-4xl">📧</div>
-                <h3 className="text-xl font-semibold text-white">Notifications</h3>
-                <p className="text-white/70">Manage system notifications</p>
-                <button className="glass-button text-white hover:bg-white hover:text-gray-800">
-                  Manage Notifications
-                </button>
-              </div>
-            </div>
-
-            <div className="glass-card group hover:scale-105 transition-transform duration-300">
-              <div className="text-center space-y-4">
-                <div className="text-4xl">🔒</div>
-                <h3 className="text-xl font-semibold text-white">Security</h3>
-                <p className="text-white/70">Security and access control</p>
-                <button className="glass-button text-white hover:bg-white hover:text-gray-800">
-                  Security Settings
-                </button>
+                <div className="text-4xl">✅</div>
+                <h3 className="text-xl font-semibold text-white">Approvals</h3>
+                <p className="text-white/70">Review pending approvals</p>
+                <Link to="/admin/approvals" className="glass-button text-white hover:bg-white hover:text-gray-800 block">
+                  Review Approvals
+                </Link>
               </div>
             </div>
           </div>
 
           {/* Recent Activity */}
           <div className="glass-card">
-            <h3 className="text-2xl font-bold text-white mb-6">Recent Activity</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border-b border-white/10">
-                <div>
-                  <p className="text-white font-medium">New campaign created</p>
-                  <p className="text-white/60 text-sm">Computer Science Scholarship Program</p>
+            <h3 className="text-xl font-semibold text-white mb-4">Recent Activity</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2 border-b border-white/10">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span className="text-white/70">System running normally</span>
                 </div>
-                <span className="text-white/40 text-sm">2 hours ago</span>
+                <span className="text-white/50 text-sm">Just now</span>
               </div>
-              <div className="flex items-center justify-between p-4 border-b border-white/10">
-                <div>
-                  <p className="text-white font-medium">New user registered</p>
-                  <p className="text-white/60 text-sm">student@example.com</p>
+              <div className="flex items-center justify-between py-2 border-b border-white/10">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <span className="text-white/70">Database backup completed</span>
                 </div>
-                <span className="text-white/40 text-sm">4 hours ago</span>
+                <span className="text-white/50 text-sm">2 hours ago</span>
               </div>
-              <div className="flex items-center justify-between p-4 border-b border-white/10">
-                <div>
-                  <p className="text-white font-medium">Donation received</p>
-                  <p className="text-white/60 text-sm">₹5,000 for Rural School Infrastructure</p>
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span className="text-white/70">New user registrations</span>
                 </div>
-                <span className="text-white/40 text-sm">6 hours ago</span>
+                <span className="text-white/50 text-sm">5 hours ago</span>
               </div>
             </div>
           </div>

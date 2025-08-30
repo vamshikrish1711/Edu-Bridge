@@ -56,9 +56,9 @@ export const authService = {
 
 // Campaign Services
 export const campaignService = {
-  getAll: () => api.get('/campaigns'),
+  getAll: () => api.get('/campaigns/'),
   getById: (id) => api.get(`/campaigns/${id}`),
-  create: (data) => api.post('/campaigns', data),
+  create: (data) => api.post('/campaigns/', data),
   update: (id, data) => api.put(`/campaigns/${id}`, data),
   delete: (id) => api.delete(`/campaigns/${id}`),
   donate: (id, data) => api.post(`/campaigns/${id}/donate`, data),
@@ -68,23 +68,23 @@ export const campaignService = {
 export const userService = {
   getProfile: () => api.get('/users/profile'),
   updateProfile: (data) => api.put('/users/profile', data),
-  getAll: () => api.get('/users'),
+  getAll: () => api.get('/users/'),
   getById: (id) => api.get(`/users/${id}`),
 };
 
 // Donation Services
 export const donationService = {
-  getAll: () => api.get('/donations'),
+  getAll: () => api.get('/donations/'),
   getById: (id) => api.get(`/donations/${id}`),
-  create: (data) => api.post('/donations', data),
+  create: (data) => api.post('/donations/', data),
   getByCampaign: (campaignId) => api.get(`/donations/campaign/${campaignId}`),
 };
 
 // Mentor Services
 export const mentorService = {
-  getAll: () => api.get('/mentors'),
+  getAll: () => api.get('/mentors/'),
   getById: (id) => api.get(`/mentors/${id}`),
-  create: (data) => api.post('/mentors', data),
+  create: (data) => api.post('/mentors/', data),
   update: (id, data) => api.put(`/mentors/${id}`, data),
   delete: (id) => api.delete(`/mentors/${id}`),
 };

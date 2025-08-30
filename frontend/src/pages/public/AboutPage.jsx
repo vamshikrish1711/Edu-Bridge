@@ -1,4 +1,7 @@
 import Navbar from '../../components/Navbar';
+import frontendImg from '../../assets/frontend.jpeg';
+import sampathImg from '../../assets/1000262740.jpg';
+import backendImg from '../../assets/backend.jpeg';
 
 const AboutPage = () => {
   const stats = [
@@ -32,25 +35,25 @@ const AboutPage = () => {
   ];
 
   const team = [
-    {
-      name: 'Vamshi Krishna',
-      role: 'FrontEnd Developer',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-      bio: 'Experienced Web Designer & Developer with Industry Projects.'
-    },
-    {
-      name: 'Sampath',
-      role: 'DataBase Developer',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      bio: 'Tech enthusiast passionate about making education accessible to all.'
-    },
-    {
-      name: 'Bhanu Chandu',
-      role: 'BackEnd Developer',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-      bio: 'Social worker dedicated to bridging educational gaps in rural areas.'
-    }
-  ];
+  {
+    name: 'Vamshi Krishna',
+    role: 'FrontEnd Developer',
+    image: frontendImg,
+    bio: 'Experienced Web Designer & Developer with Industry Projects.'
+  },
+  {
+    name: 'Sampath',
+    role: 'DataBase Developer',
+    image: sampathImg,
+    bio: 'Tech enthusiast passionate about making education accessible to all.'
+  },
+  {
+    name: 'Bhanu Chandu',
+    role: 'BackEnd Developer',
+    image: backendImg,
+    bio: 'Social worker dedicated to bridging educational gaps in rural areas.'
+  }
+];
 
   return (
     <div className="min-h-screen animated-bg">
@@ -98,12 +101,7 @@ const AboutPage = () => {
                 innovative platform, creating a supportive ecosystem that nurtures learning and growth.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="glass-button text-white hover:bg-white hover:text-gray-800">
-                  Learn More
-                </button>
-                <button className="glass-button text-white hover:bg-white hover:text-gray-800">
-                  Get Involved
-                </button>
+                
               </div>
             </div>
             <div className="glass-card p-8">

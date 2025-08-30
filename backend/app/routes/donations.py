@@ -5,6 +5,27 @@ import uuid
 
 donations_bp = Blueprint('donations', __name__)
 
+@donations_bp.route('/', methods=['GET'])
+def get_all_donations():
+    """Get all donations (for admin purposes)"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        donations = Donation.objects.all().order_by('-created_at')
+        total = donations.count()
+        donations = donations.skip((page - 1) * per_page).limit(per_page)
+        
+        return jsonify({
+            'donations': [donation.to_dict() for donation in donations],
+            'total': total,
+            'pages': (total + per_page - 1) // per_page,
+            'current_page': page
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @donations_bp.route('/', methods=['POST'])
 @jwt_required()
 def create_donation():

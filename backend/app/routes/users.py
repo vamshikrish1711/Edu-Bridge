@@ -4,6 +4,27 @@ from app.models import User, Student, Mentor, NGO
 
 users_bp = Blueprint('users', __name__)
 
+@users_bp.route('/', methods=['GET'])
+def get_all_users():
+    """Get all users (for admin purposes)"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        users = User.objects.all().order_by('-created_at')
+        total = users.count()
+        users = users.skip((page - 1) * per_page).limit(per_page)
+        
+        return jsonify({
+            'users': [user.to_dict() for user in users],
+            'total': total,
+            'pages': (total + per_page - 1) // per_page,
+            'current_page': page
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @users_bp.route('/profile', methods=['GET'])
 @jwt_required()
 def get_user_profile():

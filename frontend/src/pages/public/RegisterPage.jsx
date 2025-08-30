@@ -1,59 +1,118 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/apiService';
 import Navbar from '../../components/Navbar';
+import SuccessPopup from '../../components/SuccessPopup';
+import ErrorPopup from '../../components/ErrorPopup';
+import { getErrorConfig } from '../../utils/errorHandler';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1); // 1 = select role, 2 = register form
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student',
+    role: null,
     phone: '',
     organization: ''
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [step, setStep] = useState(1);
-
-  const roles = [
-    { value: 'student', label: 'Student', icon: '🎓', description: 'Looking for educational opportunities and mentorship' },
-    { value: 'mentor', label: 'Mentor', icon: '👨‍🏫', description: 'Want to guide and support students' },
-    { value: 'donor', label: 'Donor', icon: '💝', description: 'Want to support educational initiatives' },
-    { value: 'ngo', label: 'NGO', icon: '🏢', description: 'Organization creating educational campaigns' },
-    { value: 'admin', label: 'Admin', icon: '👨‍💼', description: 'Platform administrator' }
-  ];
+  const [loading, setLoading] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [registrationSuccessData, setRegistrationSuccessData] = useState({});
+  const [errorData, setErrorData] = useState({});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     
-    // Validate passwords match
+    // Client-side validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      const validationError = {
+        title: '🔒 Passwords Do Not Match',
+        message: 'The passwords you entered do not match. Please make sure both passwords are identical.',
+        errorType: 'validation',
+        icon: '🔒',
+        autoClose: false,
+        showRetryButton: true
+      };
+      setErrorData(validationError);
+      setShowErrorPopup(true);
       return;
     }
 
-    // Validate password length
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      const validationError = {
+        title: '🔒 Password Too Short',
+        message: 'Password must be at least 6 characters long. Please choose a stronger password.',
+        errorType: 'validation',
+        icon: '🔒',
+        autoClose: false,
+        showRetryButton: true
+      };
+      setErrorData(validationError);
+      setShowErrorPopup(true);
       return;
     }
 
-    setIsSubmitting(true);
-    
+    setLoading(true);
     try {
       const response = await authService.register(formData);
       const { access_token, user } = response.data;
-      
-      // Store auth data
       authService.setAuthData(access_token, user);
-      
-      // Redirect based on role
+
+      // Show success popup
+      setRegistrationSuccessData({
+        title: '🎉 Registration Successful!',
+        message: `Welcome to EduBridge, ${user.first_name}! Your account has been created successfully as a ${user.role}.`,
+        icon: '🎉'
+      });
+      setShowSuccessPopup(true);
+
+      // Navigate after a short delay to let user see the success message
+      setTimeout(() => {
+        switch (user.role) {
+          case 'student':
+            navigate('/student/dashboard');
+            break;
+          case 'mentor':
+            navigate('/mentor/dashboard');
+            break;
+          case 'donor':
+            navigate('/donor/dashboard');
+            break;
+          case 'ngo':
+            navigate('/ngo/dashboard');
+            break;
+          case 'admin':
+            navigate('/admin/dashboard');
+            break;
+          default:
+            navigate('/');
+        }
+      }, 2500); // 2.5 second delay
+
+    } catch (err) {
+      // Get error configuration for registration context
+      const errorConfig = getErrorConfig(err, 'registration');
+      setErrorData(errorConfig);
+      setShowErrorPopup(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSuccessPopupClose = () => {
+    setShowSuccessPopup(false);
+    // Navigate immediately if user closes popup manually
+    if (registrationSuccessData.user) {
+      const { user } = registrationSuccessData;
       switch (user.role) {
         case 'student':
           navigate('/student/dashboard');
@@ -73,274 +132,236 @@ const RegisterPage = () => {
         default:
           navigate('/');
       }
-    } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  const handleErrorPopupClose = () => {
+    setShowErrorPopup(false);
   };
 
-  const nextStep = () => {
-    if (step === 1 && formData.role) {
-      setStep(2);
-    }
-  };
-
-  const prevStep = () => {
-    setStep(1);
+  const handleRetry = () => {
+    setShowErrorPopup(false);
+    // Form is already filled, user can try again
   };
 
   return (
     <div className="min-h-screen animated-bg">
       <Navbar />
       
-      <div className="flex items-center justify-center min-h-screen pt-20 px-4">
-        <div className="w-full max-w-2xl">
-          {/* Registration Card */}
-          <div className="glass-card">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-2">Join EduBridge</h2>
-              <p className="text-white/70">Create your account and start making a difference</p>
+      {/* Success Popup */}
+      <SuccessPopup
+        isVisible={showSuccessPopup}
+        onClose={handleSuccessPopupClose}
+        title={registrationSuccessData.title}
+        message={registrationSuccessData.message}
+        icon={registrationSuccessData.icon}
+        autoClose={true}
+        autoCloseDelay={2500}
+        showCloseButton={true}
+      />
+
+      {/* Error Popup */}
+      <ErrorPopup
+        isVisible={showErrorPopup}
+        onClose={handleErrorPopupClose}
+        title={errorData.title}
+        message={errorData.message}
+        errorType={errorData.errorType}
+        icon={errorData.icon}
+        showCloseButton={true}
+        showRetryButton={errorData.showRetryButton}
+        onRetry={handleRetry}
+      />
+
+      <div className="flex flex-col items-center justify-center min-h-screen pt-20 px-4">
+        
+        {/* 🔹 Page Title */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold text-white mb-2">Join EduBridge</h1>
+          <p className="text-white/80 text-lg">
+            Create your account and start making a difference
+          </p>
+        </div>
+
+        <div className="w-full max-w-md">
+          <div className="glass-card p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-bold text-white mb-2">
+                {step === 1 ? 'Choose your role' : `Register as ${formData.role}`}
+              </h2>
+              <p className="text-white/70">
+                {step === 1
+                  ? 'Select your role to continue'
+                  : 'Fill in your details to create an account'}
+              </p>
             </div>
 
-            {/* Progress Steps */}
-            <div className="flex items-center justify-center mb-8">
-              <div className="flex items-center space-x-4">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step >= 1 ? 'bg-blue-500 text-white' : 'bg-white/20 text-white/50'
-                }`}>
-                  1
-                </div>
-                <div className={`w-16 h-0.5 ${
-                  step >= 2 ? 'bg-blue-500' : 'bg-white/20'
-                }`}></div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step >= 2 ? 'bg-blue-500 text-white' : 'bg-white/20 text-white/50'
-                }`}>
-                  2
-                </div>
-              </div>
-            </div>
-
-            {step === 1 ? (
-              /* Step 1: Role Selection */
+            {/* Step 1: Role Selection */}
+            {step === 1 && (
               <div>
-                <h3 className="text-xl font-semibold text-white mb-6 text-center">Choose Your Role</h3>
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  {roles.map((role) => (
-                    <label
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: 'student', label: 'Student', icon: '🎓' },
+                    { value: 'mentor', label: 'Mentor', icon: '👨‍🏫' },
+                    { value: 'donor', label: 'Donor', icon: '💝' },
+                    { value: 'ngo', label: 'NGO', icon: '🏢' },
+                    { value: 'admin', label: 'Admin', icon: '👨‍💼' }
+                  ].map((role) => (
+                    <div
                       key={role.value}
-                      className={`glass-card cursor-pointer transition-all duration-300 ${
+                      onClick={() => setFormData({ ...formData, role: role.value })}
+                      className={`cursor-pointer transition-all duration-300 rounded-lg p-4 text-center ${
                         formData.role === role.value
-                          ? 'ring-2 ring-blue-400 bg-blue-500/20'
-                          : 'hover:bg-white/10'
+                          ? 'bg-white/20 border-2 border-white text-white scale-105'
+                          : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
                       }`}
                     >
-                      <input
-                        type="radio"
-                        name="role"
-                        value={role.value}
-                        checked={formData.role === role.value}
-                        onChange={handleChange}
-                        className="sr-only"
-                      />
-                      <div className="text-center p-4">
-                        <div className="text-3xl mb-2">{role.icon}</div>
-                        <div className="text-white font-medium mb-1">{role.label}</div>
-                        <div className="text-white/60 text-xs">{role.description}</div>
+                      {/* Icon with size change */}
+                      <div
+                        className={`mb-1 transition-all duration-300 ${
+                          formData.role === role.value ? 'text-3xl' : 'text-2xl'
+                        }`}
+                      >
+                        {role.icon}
                       </div>
-                    </label>
+                      <div className="text-sm font-medium">{role.label}</div>
+                    </div>
                   ))}
                 </div>
+
                 <button
-                  onClick={nextStep}
+                  type="button"
                   disabled={!formData.role}
-                  className="w-full glass-button text-white hover:bg-white hover:text-gray-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setStep(2)}
+                  className={`mt-6 w-full glass-button text-white font-medium transition-colors ${
+                    !formData.role
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'hover:bg-white hover:text-gray-800'
+                  }`}
                 >
                   Continue
                 </button>
               </div>
-            ) : (
-              /* Step 2: Registration Form */
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
+            )}
+
+            {/* Step 2: Registration Form */}
+            {step === 2 && (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="firstName" className="block text-white/80 text-sm font-medium mb-2">
-                      First Name
-                    </label>
+                    <label className="block text-white/80 text-sm mb-1">First Name</label>
                     <input
                       type="text"
-                      id="firstName"
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="glass-input text-white placeholder-white/50"
-                      placeholder="Enter your first name"
                       required
+                      className="w-full px-3 py-2 rounded-lg bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+                      placeholder="Enter first name"
                     />
                   </div>
                   <div>
-                    <label htmlFor="lastName" className="block text-white/80 text-sm font-medium mb-2">
-                      Last Name
-                    </label>
+                    <label className="block text-white/80 text-sm mb-1">Last Name</label>
                     <input
                       type="text"
-                      id="lastName"
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
-                      className="glass-input text-white placeholder-white/50"
-                      placeholder="Enter your last name"
                       required
+                      className="w-full px-3 py-2 rounded-lg bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+                      placeholder="Enter last name"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-white/80 text-sm font-medium mb-2">
-                    Email Address
-                  </label>
+                  <label className="block text-white/80 text-sm mb-1">Email</label>
                   <input
                     type="email"
-                    id="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="glass-input text-white placeholder-white/50"
-                    placeholder="Enter your email"
                     required
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+                    placeholder="Enter email address"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-white/80 text-sm font-medium mb-2">
-                    Phone Number
-                  </label>
+                  <label className="block text-white/80 text-sm mb-1">Phone</label>
                   <input
                     type="tel"
-                    id="phone"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="glass-input text-white placeholder-white/50"
-                    placeholder="Enter your phone number"
                     required
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+                    placeholder="Enter phone number"
                   />
                 </div>
 
-                {(formData.role === 'ngo' || formData.role === 'mentor') && (
+                {(formData.role === 'ngo' || formData.role === 'admin') && (
                   <div>
-                    <label htmlFor="organization" className="block text-white/80 text-sm font-medium mb-2">
-                      {formData.role === 'ngo' ? 'Organization Name' : 'Company/Organization'}
-                    </label>
+                    <label className="block text-white/80 text-sm mb-1">Organization</label>
                     <input
                       type="text"
-                      id="organization"
                       name="organization"
                       value={formData.organization}
                       onChange={handleChange}
-                      className="glass-input text-white placeholder-white/50"
-                      placeholder={`Enter your ${formData.role === 'ngo' ? 'organization' : 'company'} name`}
                       required
+                      className="w-full px-3 py-2 rounded-lg bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+                      placeholder="Enter organization name"
                     />
                   </div>
                 )}
 
                 <div>
-                  <label htmlFor="password" className="block text-white/80 text-sm font-medium mb-2">
-                    Password
-                  </label>
+                  <label className="block text-white/80 text-sm mb-1">Password</label>
                   <input
                     type="password"
-                    id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="glass-input text-white placeholder-white/50"
-                    placeholder="Create a password"
                     required
+                    minLength={6}
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
+                    placeholder="Enter password (min 6 characters)"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-white/80 text-sm font-medium mb-2">
-                    Confirm Password
-                  </label>
+                  <label className="block text-white/80 text-sm mb-1">Confirm Password</label>
                   <input
                     type="password"
-                    id="confirmPassword"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="glass-input text-white placeholder-white/50"
+                    required
+                    minLength={6}
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-white text-sm"
                     placeholder="Confirm your password"
-                    required
                   />
                 </div>
 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    required
-                  />
-                  <label htmlFor="terms" className="ml-2 text-sm text-white/70">
-                    I agree to the{' '}
-                    <a href="#" className="text-blue-300 hover:text-blue-200">Terms of Service</a>
-                    {' '}and{' '}
-                    <a href="#" className="text-blue-300 hover:text-blue-200">Privacy Policy</a>
-                  </label>
-                </div>
-
-                <div className="flex gap-4">
+                <div className="flex justify-between items-center pt-2">
                   <button
                     type="button"
-                    onClick={prevStep}
-                    className="flex-1 glass-button text-white hover:bg-white hover:text-gray-800"
+                    onClick={() => setStep(1)}
+                    className="text-sm text-white/60 hover:text-white transition"
                   >
-                    Back
+                    ← Back
                   </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
-                    className="flex-1 glass-button text-white hover:bg-white hover:text-gray-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={loading}
+                    className="glass-button text-white font-medium hover:bg-white hover:text-gray-800 transition-colors"
                   >
-                    {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                    {loading ? 'Creating Account...' : 'Create Account'}
                   </button>
                 </div>
               </form>
             )}
-
-            {/* Login Link */}
-            <div className="text-center mt-6">
-              <p className="text-white/70">
-                Already have an account?{' '}
-                <Link
-                  to="/login"
-                  className="text-blue-300 hover:text-blue-200 font-medium transition-colors"
-                >
-                  Sign in
-                </Link>
-              </p>
-            </div>
           </div>
-
-          {/* Floating Elements */}
-          <div className="absolute top-20 left-10 glass-card w-20 h-20 rounded-full opacity-50 float"></div>
-          <div className="absolute bottom-20 right-10 glass-card w-16 h-16 rounded-full opacity-30 float" style={{animationDelay: '2s'}}></div>
         </div>
       </div>
     </div>
