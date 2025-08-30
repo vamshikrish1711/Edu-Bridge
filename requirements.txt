@@ -1,0 +1,19 @@
+# Core framework
+Flask==3.0.2
+
+# Database
+pymongo==4.7.2
+mysql-connector-python==9.0.0   # If using MySQL also
+
+# Authentication & Security
+Flask-JWT-Extended==4.6.0
+Flask-Bcrypt==1.0.1
+
+# CORS handling
+Flask-Cors==4.0.1
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Utilities
+requests==2.32.3
