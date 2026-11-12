@@ -8,6 +8,9 @@ mentor accounts and see platform analytics.
 This repository is a portfolio demo. All data is synthetic and every payment uses a
 mock gateway.
 
+## Live Url
+https://edu-bridge-flame.vercel.app/
+
 ## Demo accounts
 
 | Role | Email | Password |
